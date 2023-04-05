@@ -4,7 +4,7 @@ import datetime
 start_date = datetime.datetime.now()
 
 # Add one month to the datetime object
-expiry_date = start_date + datetime.timedelta(seconds=30000)
+expiry_date = start_date + datetime.timedelta(days=31)
 CLIENT_SERIAL_NUMBER = 'FVFFX0MMQ6M0'
 get_serial_only = True
 

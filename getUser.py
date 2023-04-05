@@ -10,7 +10,7 @@ import pandas as pd
 import getpass
 import sys
 import threading
-
+import numpy as np
 def getUser_thread():
     def click_image(i):
         photos_box = driver.find_elements(by=By.CLASS_NAME, value='_aabd')
@@ -32,13 +32,14 @@ def getUser_thread():
         return data
 
     def save_user_id_excel(added_data):
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        for data in added_data:
-            ws.append([data])
-
+        result_list = [np.nan]*len(added_data)
+        data = {'Username':added_data, 'Result':result_list}
+        df = pd.DataFrame(data)
         # save the workbook
-        wb.save(f'/Users/{username}/Downloads/automate/userList.xlsx')
+        df.to_excel(f'/Users/{username}/Downloads/automate/userList.xlsx', index=False)
+        time.sleep(2)
+
+
 
     def get_login_data(i):
         user_data = (login_datas[i])# N번째 계정
@@ -65,10 +66,10 @@ def getUser_thread():
 
     hashtag = pd.read_excel(f'/Users/{username}/Downloads/automate/data.xlsx', sheet_name='Tag').values.tolist()
     hashtag = list(map(lambda x: x[0], hashtag))
-    names = hashtag
+
 
     login_datas = pd.read_excel(f'/Users/{username}/Downloads/automate/data.xlsx', sheet_name='Login').values.tolist()
-    user_id,user_password,proxy_username,proxy_password,PROXY = get_login_data(0)
+    user_id,user_password,proxy_username,proxy_password,PROXY = get_login_data(1)
     chromedriver_path = "./chromedriver"
     driver = webdriver.Chrome(chromedriver_path)
     time.sleep(3)
@@ -83,21 +84,22 @@ def getUser_thread():
         pass
 
     login(user_id, user_password)
+    time.sleep(10)
 
-    for i in range(len(names)):
-        driver.get(f"https://www.instagram.com/explore/tags/{names[i]}")
+    for i in range(len(hashtag)):
+        driver.get(f"https://www.instagram.com/explore/tags/{hashtag[i]}")
         time.sleep(10)
         for j in range(9):
             click_image(j)
             #저장한 유저 아이디 불러오기
             try:
-                user_data = pd.read_excel(f'/Users/{username}/Downloads/automate/userList.xlsx', sheet_name='Sheet').values.tolist()
-                if len(user_data) > 300:
+                data = pd.read_excel(f'/Users/{username}/Downloads/automate/userList.xlsx', sheet_name='Sheet1')
+                if len(data) > 300:
                     sys.exit()
             except:
                 user_data = []
             #2D 에서 1D
-            user_data = list(map(lambda x: x[0], user_data))
+            user_data = data.iloc[:,0].tolist()
             added_user_data = get_comment_ids_from_photo(user_data)
             save_user_id_excel(added_user_data)
             print("Saved id number : ", len(added_user_data))

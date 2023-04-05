@@ -118,14 +118,8 @@ get_serial_number_btn.pack(pady=10)
 start_automation_btn.pack(pady=10)
 
 
-def print_remaining_time():
-    print(remaining_time.total_seconds())
-example_btn = tk.Button(root, text="get time now", command=lambda: run_function(print_remaining_time, log_text))
-example_btn.pack(pady=10)
-
-
 
 # Start the GUI event loop
 root.mainloop()
 
-#pyinstapyinstaller --onefile gui.py
+#pyinstaller --onefile gui.py
