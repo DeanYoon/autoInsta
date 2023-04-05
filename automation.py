@@ -15,6 +15,7 @@ import threading
 from customerData import expiry_date
 import datetime
 import sys
+import numpy as np
 
 
 
@@ -26,15 +27,15 @@ def automation_thread():
     username = getpass.getuser()
 
 
-    wait_time = 0
+    wait_time = 15
     # Print the operating system's name
+    file_path = f'/Users/{username}/Downloads/automate'
 
 
 
 
 
 
-    #로그인
 
 
     def login(BOT_ID,BOT_PASSWORD):
@@ -85,15 +86,15 @@ def automation_thread():
     def send_messages(ms1,ms2,ms3,ms4):
         dm_input = driver.find_element(by=By.CSS_SELECTOR, value=".x1n2onr6 [role='textbox']")
         dm_input.send_keys(ms1,Keys.ENTER)
-        time.sleep(wait_time + random.random()*10)
+        time.sleep(3 + random.random()*10)
         dm_input.send_keys(ms2,Keys.ENTER)
-        time.sleep(wait_time + random.random()*10)
+        time.sleep(3 + random.random()*10)
         dm_input.send_keys(ms3,Keys.ENTER)
-        time.sleep(wait_time + random.random()*10)
+        time.sleep(3 + random.random()*10)
         #get_images_send()
-        #time.sleep(wait_time + 8+random.random()*10)
+        #time.sleep(3 + 8+random.random()*10)
         dm_input.send_keys(ms4,Keys.ENTER)
-        time.sleep(wait_time + random.random()*10)
+        time.sleep(3 + random.random()*10)
 
 
 
@@ -167,7 +168,7 @@ def automation_thread():
             ws.append([data])
 
         # save the workbook
-        wb.save(f'/Users/{username}/Downloads/automate/userList.xlsx')
+        wb.save(f'{file_path}/userList.xlsx')
         
     # save_user_id_excel(added_user_data)
 
@@ -232,10 +233,8 @@ def automation_thread():
 
         
         
-    def move_to_user_follow_btn():
-        user_data = pd.read_excel(f'/Users/{username}/Downloads/automate/userList.xlsx', sheet_name='Sheet').values.tolist()
-        user_data = list(map(lambda x: x[0], user_data))
-        current_user = user_data[random.randint(0,len(user_data))]
+    def move_to_user_follow_btn(number):
+        current_user = user_list[number]
         driver.get(f"https://www.instagram.com/{current_user}")
         time.sleep(wait_time + random.randint(10,15))
         try:
@@ -262,7 +261,7 @@ def automation_thread():
 
     def get_message_send_random():
 
-        chat_datas = pd.read_excel(f'/Users/{username}/Downloads/automate/data.xlsx', sheet_name='DM')
+        chat_datas = pd.read_excel(f'{file_path}/data.xlsx', sheet_name='DM')
         message1 = chat_datas.iloc[:,0].tolist()
         message2 = chat_datas.iloc[:,1].tolist()
         message3 = chat_datas.iloc[:,2].tolist()
@@ -273,10 +272,15 @@ def automation_thread():
         send_messages(rand_msg1,rand_msg2,rand_msg3, rand_msg4)
         
         
-
+    def save_user_id_excel(added_data,result_data):
+        data = {'Username':added_data, 'Result':result_data}
+        df = pd.DataFrame(data)
+        # save the workbook
+        df.to_excel(f'{file_path}/userList.xlsx', index=False)
+        time.sleep(2)
 
     def get_message_send_random_ver2():
-        chat_datas = pd.read_excel(f'/Users/{username}/Downloads/automate/data.xlsx', sheet_name='DM')
+        chat_datas = pd.read_excel(f'{file_path}/data.xlsx', sheet_name='DM')
         message1 = chat_datas.iloc[:,0].tolist()
         message2 = chat_datas.iloc[:,1].tolist()
         message3 = chat_datas.iloc[:,2].tolist()
@@ -292,6 +296,7 @@ def automation_thread():
         time.sleep(wait_time + 3)
         dm_input.send_keys(rand_msg3,Keys.ENTER)
         time.sleep(wait_time + 3)
+        dm_input.send_keys(rand_msg4,Keys.ENTER)
     #이미지 전송
     #     files = os.listdir('./images')
     #     image_files = []
@@ -337,23 +342,28 @@ def automation_thread():
 
     from selenium import webdriver
 
-    num = 0
+    success = 0
     fail = 0
+
     #main
+    data = pd.read_excel(f'{file_path}/userList.xlsx', sheet_name='Sheet1')
+    user_list = data.iloc[:,0]
+    result_list = data.iloc[:,1]
+    total = np.count_nonzero(~np.isnan(result_list))
 
-
-    login_datas = pd.read_excel(f'/Users/{username}/Downloads/automate/data.xlsx', sheet_name='Login').values.tolist()
+    login_datas = pd.read_excel(f'{file_path}/data.xlsx', sheet_name='Login').values.tolist()
     chromedriver_path = "./chromedriver"
-
+    
     for t in range(30):
         for i in range(len(login_datas)):
+            
             user_id,user_password,proxy_username,proxy_password,PROXY = get_login_data(i)
             
             # Create a new Chrome webdriver instance
             driver = webdriver.Chrome(chromedriver_path)
             time.sleep(wait_time + 3)
             driver.get("https://www.instagram.com/")
-            time.sleep(wait_time + 15+random.random()*10)
+            time.sleep(wait_time + 10+random.random()*10)
             check_time_quit()
             try:
                 driver.find_element(by=By.CLASS_NAME, value='_a9_0').click()
@@ -362,11 +372,17 @@ def automation_thread():
                 pass
             
             try:
+                current_location = driver.current_url
                 login(user_id, user_password)
+                time.sleep(5)
+                if current_location == driver.current_url:
+                    print(f"Login Failed : {user_id}")
+                    break
+
                 check_time_quit()
-                for j in range(3):
+                for j in range(random.randint(1,5)):
                     current_user = ''
-                    current_user = move_to_user_follow_btn()
+                    current_user = move_to_user_follow_btn(total)
                     check_time_quit()
                     try:
                         click_message_btn()
@@ -383,33 +399,44 @@ def automation_thread():
 
                         try:
                             get_message_send_random()
-                            num+=1
-                            print(num,' done')
+                            success+=1
+                            result_list[total] = 1
+                            print(success,' done')
                         except:
                             try:
                                 get_message_send_random_ver2()
-                                num+=1
-                                print(num, ' done')
+                                success+=1
+                                result_list[total] = 1
+                                print(success, ' done')
                             except:
                                 print('메세지 불가 계정')
                                 fail+=1
-                                pass
+                                result_list[total] = 0
 
+                    
 
                     except:
                         print('비공개 계정')
                         fail+=1
-                        pass
-    #                 time.sleep(wait_time + random.random()*15+10)
+                        result_list[total] = 0
+
+                    total+=1
+                    data = {'Username':user_list, 'Result':result_list}
+                    df = pd.DataFrame(data)
+                    # save the workbook
+                    df.to_excel(f'{file_path}/userList.xlsx', index=False)
+                    time.sleep(3)
+
                 driver.quit()
 
             except:
-                print("Login Failed")
-                pass
-            print(f'success : {num}, fail : {fail}')
+                print(f"Login Failed : {user_id}")
+
+
+            print(f'total : {total} success : {success}, fail : {fail}')
 
 
 
 def automation():
-    t = threading.Thread(target=automation_thread)
+    t = threading.Thread(target=automation_thread)#gui를 멈추는것을 막기 위해 별도로 실행하게끔 만들어줌
     t.start()
