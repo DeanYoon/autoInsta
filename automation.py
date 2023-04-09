@@ -41,9 +41,9 @@ def automation_thread():
     def login(BOT_ID,BOT_PASSWORD):
         driver.find_element(by=By.TAG_NAME, value="input").send_keys(BOT_ID)
         driver.find_elements(by=By.TAG_NAME, value="input")[1].send_keys(BOT_PASSWORD)
-        time.sleep(wait_time + random.randint(3,5))
+        time.sleep(  random.randint(3,5))
         driver.find_elements(by=By.TAG_NAME, value="input")[1].send_keys(Keys.ENTER)
-        time.sleep(wait_time + random.randint(10,15))
+        time.sleep(  random.randint(10,15))
 
 
 
@@ -184,13 +184,14 @@ def automation_thread():
             pass
 
         try:#친구나 그룹에 비공개 사진 메세지 보내세요
+            current_location = driver.current_url
             driver.find_element(by=By.TAG_NAME, value='input').send_keys(current_user)
             time.sleep(3)
             driver.find_element(by=By.CLASS_NAME, value='xhk4uv').click()
             time.sleep(5)
             driver.find_elements(by=By.CLASS_NAME, value='x9bdzbf')[1].click()
             time.sleep(3)
-
+           
         except:
             pass
 
@@ -201,12 +202,12 @@ def automation_thread():
         user_data = (login_datas[i])# N번째 계정
         user_id = user_data[0]
         user_password = user_data[1]
-        user_proxy = user_data[2]
-        user_port = int(user_data[3])
-        proxy_username = user_data[4]
-        proxy_password = user_data[5]
-        PROXY = f'{user_proxy}:{user_port}'
-        return user_id,user_password,proxy_username,proxy_password,PROXY
+        # user_proxy = user_data[2]
+        # user_port = int(user_data[3])
+        # proxy_username = user_data[4]
+        # proxy_password = user_data[5]
+        # PROXY = f'{user_proxy}:{user_port}'
+        return user_id,user_password#,proxy_username,proxy_password,PROXY
 
 
     def open_chrome(PROXY):
@@ -297,6 +298,10 @@ def automation_thread():
         dm_input.send_keys(rand_msg3,Keys.ENTER)
         time.sleep(wait_time + 3)
         dm_input.send_keys(rand_msg4,Keys.ENTER)
+
+
+
+        
     #이미지 전송
     #     files = os.listdir('./images')
     #     image_files = []
@@ -349,15 +354,14 @@ def automation_thread():
     data = pd.read_excel(f'{file_path}/userList.xlsx', sheet_name='Sheet1')
     user_list = data.iloc[:,0]
     result_list = data.iloc[:,1]
-    total = np.count_nonzero(~np.isnan(result_list))
 
     login_datas = pd.read_excel(f'{file_path}/data.xlsx', sheet_name='Login').values.tolist()
     chromedriver_path = "./chromedriver"
     
     for t in range(30):
         for i in range(len(login_datas)):
-            
-            user_id,user_password,proxy_username,proxy_password,PROXY = get_login_data(i)
+            total = np.count_nonzero(~np.isnan(result_list))
+            user_id,user_password = get_login_data(i)
             
             # Create a new Chrome webdriver instance
             driver = webdriver.Chrome(chromedriver_path)
@@ -381,8 +385,7 @@ def automation_thread():
 
                 check_time_quit()
                 for j in range(random.randint(1,5)):
-                    current_user = ''
-                    current_user = move_to_user_follow_btn(total)
+                    move_to_user_follow_btn(total)
                     check_time_quit()
                     try:
                         click_message_btn()
@@ -391,22 +394,33 @@ def automation_thread():
                             time.sleep(wait_time + 3+random.random()*10)
                         except:
                             pass
-                        
+                        dm_checked = False
                         try:
+                            current_user = user_list[total+1]
                             before_dm_check(current_user)
+                            dm_checked = True
                         except:
                             pass
 
                         try:
                             get_message_send_random()
                             success+=1
-                            result_list[total] = 1
+                            
+                            if dm_checked:
+                                result_list[total] = 0
+                                result_list[total+1] = 1
+                            else:
+                                result_list[total] = 1
                             print(success,' done')
                         except:
                             try:
                                 get_message_send_random_ver2()
                                 success+=1
-                                result_list[total] = 1
+                                if dm_checked:
+                                    result_list[total] = 0
+                                    result_list[total+1] = 1
+                                else:
+                                    result_list[total] = 1
                                 print(success, ' done')
                             except:
                                 print('메세지 불가 계정')
@@ -425,15 +439,16 @@ def automation_thread():
                     df = pd.DataFrame(data)
                     # save the workbook
                     df.to_excel(f'{file_path}/userList.xlsx', index=False)
-                    time.sleep(3)
+                    time.sleep(random.random()*100)
 
                 driver.quit()
+                time.sleep(random.random()*300)
 
             except:
                 print(f"Login Failed : {user_id}")
 
 
-            print(f'total : {total} success : {success}, fail : {fail}')
+            print(f'success : {success}, fail : {fail}')
 
 
 

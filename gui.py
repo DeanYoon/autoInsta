@@ -104,19 +104,22 @@ update_time()
 
 
 # Create buttons for each function
-if not get_serial_only:
+if get_serial_only:
+    get_serial_number_btn = tk.Button(root, text="Lets get started!", command=lambda: run_function(get_client_serial_number, log_text))
     get_user_btn = tk.Button(root, text="Get User", state=tk.DISABLED)
-    get_serial_number_btn = tk.Button(root, text="Get Serial Number", command=lambda: run_function(get_client_serial_number, log_text))
     start_automation_btn = tk.Button(root, text="Automation", state=tk.DISABLED)
+    quit_program_btn = tk.Button(root, text="Quit Program", command=root.destroy)
 else:
+    get_serial_number_btn = tk.Button(root, text="Lets get started!", command=lambda: run_function(get_client_serial_number, log_text))
     get_user_btn = tk.Button(root, text="Get User", command=lambda: run_function(getUser, log_text))
-    get_serial_number_btn = tk.Button(root, text="Get Serial Number", command=lambda: run_function(get_client_serial_number, log_text))
     start_automation_btn = tk.Button(root, text="Automation", command=lambda: run_function(automation, log_text))
+    quit_program_btn = tk.Button(root, text="Quit Program", command=root.destroy)
 
-get_user_btn.pack(pady=10)
+
 get_serial_number_btn.pack(pady=10)
+get_user_btn.pack(pady=10)
 start_automation_btn.pack(pady=10)
-
+quit_program_btn.pack(pady=10)
 
 
 # Start the GUI event loop
